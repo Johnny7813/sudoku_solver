@@ -91,6 +91,7 @@ if __name__ == '__main__':
     A.remove(2)
     A.remove(2)
     A.remove(4)
+    A.remove(4)
     A.dump()
 
 
