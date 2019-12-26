@@ -103,21 +103,6 @@ class board(object):
             return False
 
 
-    # export board into a list of lists
-    def export(self):
-        eboard = []
-
-        for i in range(9):
-            nrow = []  # represents a row on the board
-            orow = self.board_list[i]
-
-            for j in range(9):
-                ce = orow[j]
-                nrow.append(ce.value())
-
-            eboard.append(nrow)
-
-        return eboard
 
     # make a copy of the board and save it
     # these states are saved in a heap. First in, last out
@@ -128,16 +113,27 @@ class board(object):
         self.saved_states.append((board_list_copy, unexploited_cells_copy, self.unsolved_num))
         return True
 
-    # restore the last saved state. This is a heap. The last state that was saved is returned
+    # restore the last saved state. This is a heap. Object is put into this last state
+    # but this state is not removed from the heap
     def restoreState(self):
         if len(self.saved_states) == 0:
             return False
 
-        tupel = self.saved_states.pop()
+        tupel = self.saved_states[-1]
         self.board_list = tupel[0]
         self.unexploited_cells = tupel[1]
         self.unsolved_num = tupel[2]
 
+        return True
+
+
+    # removed last saved state if there is one
+    # the state of the object does not change
+    def removeState(self):
+        if len(self.saved_states) == 0:
+            return False
+
+        self.saved_states.pop()
         return True
 
 
@@ -351,17 +347,6 @@ class board(object):
         else:
             return 1  # the board is partially solved
 
-    def solve(self):
-        pass
-        ret = eraseAll()
-        self.dump2()
-
-        if ret == 2:
-            return True
-        elif ret == 1:
-            pass
-        pass
-
 
     #################### hidden singles functions ##########################
     ### reduce cells by eliminating values of solved cells from other
@@ -427,17 +412,37 @@ class board(object):
 
     # find all hidden singles
     def findAllHiddenSingles(self, repeat=True):
+        num = 0
+        solved_indices = []
         for n in range(1,10):
-            self.findHiddenSinglesInRow(n, True)
-            self.findHiddenSinglesInCol(n, True)
-            self.findHiddenSinglesInSquare(n, True)
+            tmp, ind = self.findHiddenSinglesInRow(n, repeat)
+            num += tmp
+            solved_indices.extend(ind)
+            if (not repeat) and num > 0:
+                return (num, solved_indices)
+
+            tmp, ind = self.findHiddenSinglesInCol(n, repeat)
+            num += tmp
+            solved_indices.extend(ind)
+            if (not repeat) and num > 0:
+                return (num, solved_indices)
+
+            tmp, ind = self.findHiddenSinglesInSquare(n, repeat)
+            num += tmp
+            solved_indices.extend(ind)
+            if (not repeat) and num > 0:
+                return (num, solved_indices)
+
+        # num = number of solved cells
+        # solved_indices = all indices of solved cells
+        return (num, solved_indices)
 
 
 ##################################################################
 
 
     # find first cell with the least entries
-    # return number of elements and index
+    # return number of elements in the cell and it's index
     def findLowestCell(self):
         val = 100
         ind = (10, 10)
@@ -518,8 +523,56 @@ class board(object):
 
 ###################################################################
 
-    def solve_branch(self,num, index):
-        pass
+    # branch puzzle in the cell with cell_index
+    def solve_branch(self, cell_index=None):
+        if not cell_index:
+            (num, ind) = self.findLowestCell()
+            cell_index = ind
+
+        self.saveState()
+        i,j           = cell_index
+        branch_values = list(master_cell)
+        first         = True
+
+        for v in branch_values:
+            if not first:
+                self.restoreState()
+            first = False
+
+            master_cell = self.at(i,j)
+            master_cell.remove(v)
+
+            # do an elimination step
+            ret = self.eliminateAll()
+
+            if ret == -1: # not consistent
+                continue
+
+            # check for consistency
+            if not self.is_all_consistent():
+                continue
+
+            if ret == 2: # puzzle is completely solved
+                return True
+
+            # solve all hidden singels
+            self.findAllHiddenSingles()
+            ret = self.eliminateAll()
+
+            if ret == -1: # not consistent try the next value
+                continue
+
+            if not self.is_all_consistent(): # not consistent try the next value
+                continue
+
+            if ret == 2: # puzzle is completely solved
+                return True
+
+            ## we have done an elimination step, completion step and another elimination step
+            ## now we need to branch again.
+
+
+
 
 
 
