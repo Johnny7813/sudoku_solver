@@ -349,7 +349,9 @@ class board(object):
             i, j = sudoku.unexploited_cells.popleft()
             ret  = sudoku.eliminateVal(i, j, 2)
 
-            if ret[0] == -1: return -1  # error encountered
+            if ret[0] == -1:
+                return (-1, reduced_cells, solved_cells)  # error encountered
+
             reduced_cells.extend(ret[1])
             solved_cells.extend(ret[2])
             fret = max(ret[0], fret)  # fret set to max value of all returns
@@ -542,7 +544,7 @@ class board(object):
             fret = ret[0]
 
         for i in range(1, 10):
-            print("iteration =", i)
+            #print("iteration =", i)
             (num, solved_indices) = self.findAllHiddenSingles(repeat=True)
 
             if not self.is_all_consistent():  # board not consistent
@@ -566,74 +568,58 @@ class board(object):
 
 
     # branch puzzle in the cell with cell_index
-    def solve_branch(self, cell_index=None):
-        if not cell_index:
-            (num, ind) = self.findLowestCell()
-            cell_index = ind
+    def solve_branch(self, root_cell_index=None):
+        if not root_cell_index:
+            (num, ind)      = self.findLowestCell()
+            root_cell_index = ind
 
+        # make common changes and save
+        # this save state is only used in this function
+        self.unexploited_cells.append(root_cell_index)
+        self.unsolved_num -= 1
         self.saveState()
-        i,j           = cell_index
-        branch_values = list(self.at(i,j))
-        first         = True
-        print("solve_branch with values =", branch_values, " , at index =", (i,j))
 
-        for v in branch_values:
-            print("try branch: index =",(i,j), ", value v =", v)
+        # root_cell: this is where we branch. We just try both values
+        # and see which leads to a consistent puzzle
+        # candidates: the values of root_cell. In turn we remove each
+        # value from root_cell.
+        root_cell     = self.at(*root_cell_index)  # * unpacks roo_cell_index into 2 arguments
+        candidates    = list(root_cell)
+        first         = True
+        #candidates.sort(reverse=True)
+        print("\nsolve_branch with values =", candidates, " , at index =", root_cell_index)
+
+
+        for v in candidates:
+            print("try branch with value v =", v)
+            print("recurstion depth =", len(self.saved_states))
 
             if not first:
                 self.restoreState()
+                root_cell = self.at(*root_cell_index)
             first = False
 
-            master_cell = self.at(i,j)
-            master_cell.remove(v)
-            self.unsolved_num -= 1
+            root_cell.remove(v)
 
             # do an elimination step
-            ret = self.eliminateAll()
+            ret = self.solve_logic()
 
-            if ret == -1: # not consistent
+            if   ret == -1: # not consistent
                 continue
+            else:
+                if self.unsolved_num == 0:  # puzzle completely solved
+                    self.removeState()
+                    return True
+                else: # puzzle consistent, but not fully solved, we do another branch
+                    self.dump3()
+                    if self.solve_branch():
+                        self.removeState()
+                        return True
 
-            # check for consistency
-            if not self.is_all_consistent():
-                continue
+            #print("Do I ever get here?") # yes
 
-            if ret == 2: # puzzle is completely solved
-                self.removeState()
-                return True
 
-            # solve all hidden singels
-            num, solved_indices = self.findAllHiddenSingles()
-            ret = self.eliminateAll()
-
-            if ret == -1: # not consistent try the next value
-                continue
-
-            if not self.is_all_consistent(): # not consistent try the next value
-                continue
-
-            if ret == 2: # puzzle is completely solved
-                self.removeState()
-                return True
-
-            # solve all hidden singels
-            num, solved_indices = self.findAllHiddenSingles()
-            ret = self.eliminateAll()
-
-            if ret == -1:  # not consistent try the next value
-                continue
-
-            if not self.is_all_consistent():  # not consistent try the next value
-                continue
-
-            if ret == 2:  # puzzle is completely solved
-                self.removeState()
-                return True
-
-            self.dump3()
-            ## we have done an elimination step, completion step and another elimination step
-            ## now we need to branch again.
-
+        self.removeState()
         return False
 
 
@@ -693,27 +679,14 @@ class board(object):
 
 if __name__ == '__main__':
 
-    sudoku = board("sudoku_data.csv", "hard1")
+    sudoku = board("sudoku_data.csv", "hardest1")
 
-    #sudoku.dump3()
-    #sudoku.eliminateAll()
-
-    #sudoku.dump3()
-    #sudoku.findAllHiddenSingles()
-
-    #sudoku.dump3()
-    #sudoku.eliminateAll()
-
-    #sudoku.dump3()
-
-    #if sudoku.is_all_consistent():
-    #    print("board is consistent")
-
-    #sudoku.solve_branch()
     sudoku.dump3()
-
     ret = sudoku.solve_logic()
+    sudoku.dump3()
     print("sove_logic returns=", ret)
+    if sudoku.unsolved_num > 0:
+        ret = sudoku.solve_branch()
 
 
     sudoku.dump3()
