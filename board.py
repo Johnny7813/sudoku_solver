@@ -336,16 +336,25 @@ class board(object):
 
     # erase all possible values, i.e. solve as far as possible
     # by elimination only
+    # return -1: error encountered, board not consistent
+    # return 0: nothing could be erased and nothing solved
+    # return 1: numbers could be erased but no cell solved
+    # return 2: cells could be solved
     def eliminateAll(self):
+        fret = 0  # return value of this function
+        solved_cells  = []
+        reduced_cells = []
+
         while self.unexploited_cells:
             i, j = sudoku.unexploited_cells.popleft()
             ret  = sudoku.eliminateVal(i, j, 2)
-            if ret == -1: return -1  # error encountered
 
-        if self.unsolved_num == 0:
-            return 2  # the board is completely solved
-        else:
-            return 1  # the board is partially solved
+            if ret[0] == -1: return -1  # error encountered
+            reduced_cells.extend(ret[1])
+            solved_cells.extend(ret[2])
+            fret = max(ret[0], fret)  # fret set to max value of all returns
+
+        return (fret, reduced_cells, solved_cells)
 
 
     #################### hidden singles functions ##########################
@@ -522,6 +531,39 @@ class board(object):
         return (True, 0)
 
 ###################################################################
+    # solve as much as possible using only elimination and
+    # and hiddenSingles
+    def solve_logic(self):
+        fret = 0
+        ret  = self.eliminateAll()
+        if ret[0] == -1: # error, board not consistent
+            return -1
+        else:
+            fret = ret[0]
+
+        for i in range(1, 10):
+            print("iteration =", i)
+            (num, solved_indices) = self.findAllHiddenSingles(repeat=True)
+
+            if not self.is_all_consistent():  # board not consistent
+                return -1
+
+            if num > 0:  # more has been solved, we can leave
+                fret = 2
+
+            ret = self.eliminateAll()
+            if ret[0] == -1:  # error, board not consistent
+                return -1
+            else:
+                fret = max(fret, ret[0])
+
+            if num == 0 and ret[0] == 0: # no cell has been solved, or eliminated
+                return fret
+
+        return fret
+
+
+
 
     # branch puzzle in the cell with cell_index
     def solve_branch(self, cell_index=None):
@@ -531,16 +573,20 @@ class board(object):
 
         self.saveState()
         i,j           = cell_index
-        branch_values = list(master_cell)
+        branch_values = list(self.at(i,j))
         first         = True
+        print("solve_branch with values =", branch_values, " , at index =", (i,j))
 
         for v in branch_values:
+            print("try branch: index =",(i,j), ", value v =", v)
+
             if not first:
                 self.restoreState()
             first = False
 
             master_cell = self.at(i,j)
             master_cell.remove(v)
+            self.unsolved_num -= 1
 
             # do an elimination step
             ret = self.eliminateAll()
@@ -553,10 +599,11 @@ class board(object):
                 continue
 
             if ret == 2: # puzzle is completely solved
+                self.removeState()
                 return True
 
             # solve all hidden singels
-            self.findAllHiddenSingles()
+            num, solved_indices = self.findAllHiddenSingles()
             ret = self.eliminateAll()
 
             if ret == -1: # not consistent try the next value
@@ -566,22 +613,28 @@ class board(object):
                 continue
 
             if ret == 2: # puzzle is completely solved
+                self.removeState()
                 return True
 
+            # solve all hidden singels
+            num, solved_indices = self.findAllHiddenSingles()
+            ret = self.eliminateAll()
+
+            if ret == -1:  # not consistent try the next value
+                continue
+
+            if not self.is_all_consistent():  # not consistent try the next value
+                continue
+
+            if ret == 2:  # puzzle is completely solved
+                self.removeState()
+                return True
+
+            self.dump3()
             ## we have done an elimination step, completion step and another elimination step
             ## now we need to branch again.
 
-
-
-
-
-
-
-
-
-
-
-
+        return False
 
 
 
@@ -642,35 +695,26 @@ if __name__ == '__main__':
 
     sudoku = board("sudoku_data.csv", "hard1")
 
-    sudoku.dump3()
-    sudoku.eliminateAll()
+    #sudoku.dump3()
+    #sudoku.eliminateAll()
 
-    sudoku.dump3()
-    sudoku.findAllHiddenSingles()
+    #sudoku.dump3()
+    #sudoku.findAllHiddenSingles()
 
-    sudoku.dump3()
-    sudoku.eliminateAll()
+    #sudoku.dump3()
+    #sudoku.eliminateAll()
 
-    sudoku.dump3()
+    #sudoku.dump3()
 
-    if sudoku.is_all_consistent():
-        print("board is consistent")
+    #if sudoku.is_all_consistent():
+    #    print("board is consistent")
 
-    (val, ind) = sudoku.findLowestCell()
-    #print("Value, Index: ", val, ind)
-
-    mcell = sudoku.at(ind[0], ind[1])
-    mcell.dump()
-    mcell.remove(5)
-    mcell.dump()
-    sudoku.unsolved_num -= 1
-    sudoku.unexploited_cells.append(ind)
-
-    ret = sudoku.eliminateAll()
+    #sudoku.solve_branch()
     sudoku.dump3()
 
-    ret = sudoku.is_all_consistent()
-    if ret[0]:
-        print("board is consistent")
-    else:
-        print("board is NOT consistent, ", ret[1], ret[2])
+    ret = sudoku.solve_logic()
+    print("sove_logic returns=", ret)
+
+
+    sudoku.dump3()
+
