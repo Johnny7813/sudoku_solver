@@ -17,10 +17,9 @@ __version__ = "0.5.1"
 
 
 class SudokuCellWidget(QtWidgets.QFrame):
-    const = {"totalWidth": 72, "lineWidth": 4, "font": "Noto Sans", "fontSize": 20, "centralFontSize": 40}
+    metrics    = {"cellWidth": 72, "cLineWidth": 2, "font": "Noto Sans", "fontSize": 20, "centralFontSize": 40}
     textPoints = [QPoint(25,49), QPoint(11, 23), QPoint(30, 23), QPoint(49, 23), QPoint(11, 43),
                   QPoint(30, 43), QPoint(49, 43), QPoint(11, 63), QPoint(30, 63), QPoint(49, 63)]
-
 
 
     def __init__(self, mcell, parent):
@@ -30,10 +29,10 @@ class SudokuCellWidget(QtWidgets.QFrame):
         # set frame style as plain and box
         self.setFrameStyle(QFrame.Plain | QFrame.Panel)  # QFrame.Plain | QFrame.Box == 17
 
-        tWidth = SudokuCellWidget.const["totalWidth"]
+        tWidth = SudokuCellWidget.metrics["cellWidth"]
         self.setFixedSize(tWidth, tWidth)
 
-        lineWidth = SudokuCellWidget.const["lineWidth"]
+        lineWidth = SudokuCellWidget.metrics["cLineWidth"]
         self.setLineWidth(lineWidth)
         rect = QtCore.QRect(0, 0, tWidth, tWidth)   # x,y, with, height
         self.setFrameRect(rect)
@@ -81,8 +80,8 @@ class SudokuCellWidget(QtWidgets.QFrame):
 
         painter = QPainter(self)
 
-        fName   = SudokuCellWidget.const["font"]
-        fSize   = SudokuCellWidget.const["fontSize"]
+        fName   = SudokuCellWidget.metrics["font"]
+        fSize   = SudokuCellWidget.metrics["fontSize"]
 
         font    = QFont(fName)
 
@@ -94,20 +93,17 @@ class SudokuCellWidget(QtWidgets.QFrame):
         if self.myCell.isSolved():
             val   = self.myCell.value()
             point = SudokuCellWidget.textPoints[0]
-            fSize = SudokuCellWidget.const["centralFontSize"]
+            fSize = SudokuCellWidget.metrics["centralFontSize"]
 
             font.setPixelSize(fSize)
             painter.setFont(font)
             painter.drawText(point, str(val))
         else:
-            fSize = SudokuCellWidget.const["fontSize"]
+            fSize = SudokuCellWidget.metrics["fontSize"]
             font.setPixelSize(fSize)
             painter.setFont(font)
             for i in self.myCell:
                 point = SudokuCellWidget.textPoints[i]
                 painter.drawText(point, str(i))
-
-
-
 
 
