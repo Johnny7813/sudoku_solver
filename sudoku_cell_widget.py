@@ -20,7 +20,8 @@ class SudokuCellWidget(QtWidgets.QFrame):
     metrics    = {"cellWidth": 72, "cLineWidth": 2, "font": "Noto Sans", "fontSize": 20, "centralFontSize": 40}
     textPoints = [QPoint(25,49), QPoint(11, 23), QPoint(30, 23), QPoint(49, 23), QPoint(11, 43),
                   QPoint(30, 43), QPoint(49, 43), QPoint(11, 63), QPoint(30, 63), QPoint(49, 63)]
-
+    colors     = {"normal": QColor(255,255,255), "highlight1": QColor(196, 219, 255),
+                  "highlight2": QColor(215, 158, 250)}
 
     def __init__(self, mcell, parent):
         super().__init__(parent)
@@ -28,6 +29,7 @@ class SudokuCellWidget(QtWidgets.QFrame):
         self.myCell = mcell
         # set frame style as plain and box
         self.setFrameStyle(QFrame.Plain | QFrame.Panel)  # QFrame.Plain | QFrame.Box == 17
+        self.setBackground("normal")
 
         tWidth = SudokuCellWidget.metrics["cellWidth"]
         self.setFixedSize(tWidth, tWidth)
@@ -37,7 +39,6 @@ class SudokuCellWidget(QtWidgets.QFrame):
         rect = QtCore.QRect(0, 0, tWidth, tWidth)   # x,y, with, height
         self.setFrameRect(rect)
 
-        #self.experiment()
 
 
 
@@ -52,6 +53,8 @@ class SudokuCellWidget(QtWidgets.QFrame):
               "Mid Line Width: ", self.midLineWidth())
 
         painter = QPainter(self)
+
+
 
         fName = SudokuCellWidget.const["font"]
         fSize = SudokuCellWidget.const["fontSize"]
@@ -70,16 +73,22 @@ class SudokuCellWidget(QtWidgets.QFrame):
             print("Number ", i, " , bounding Rect: ", mRect, " Width: ", mRect.width(), mRect.width()//2 )
 
 
-
+    # set background
+    def setBackground(self, name):
+        pal    = self.palette()
+        bColor = SudokuCellWidget.colors[name]
+        pal.setColor(QPalette.Background, bColor)
+        self.setAutoFillBackground(True)
+        self.setPalette(pal)
 
 
 
     # main paint function
     def paintEvent(self, event: QtGui.QPaintEvent):
+
         super().paintEvent(event)
 
         painter = QPainter(self)
-
         fName   = SudokuCellWidget.metrics["font"]
         fSize   = SudokuCellWidget.metrics["fontSize"]
 

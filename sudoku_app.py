@@ -16,10 +16,10 @@ class MainWindow(QMainWindow):
         font.setPointSize(12)
         self.setFont(font)
 
-        self.sudokuModel = modelBoard("sudoku_data.csv", "easy1")
+        self.sudokuModel = modelBoard("sudoku_data.csv", "easy3")
         #QtCore.QCoreApplication.addLibraryPath(".")
         #self.setupUi(self)
-        self.setWindowTitle("Sudoku cell test")
+        self.setWindowTitle("Sudoku Application Test")
         self.setMinimumSize(880, 780)
         self.resize(900, 780)
         self.setObjectName("sudokuMainWindow")
@@ -68,9 +68,8 @@ class MainWindow(QMainWindow):
         self.menuFile.addAction(self.actionOpen_sudoku)
         self.menubar.addAction(self.menuFile.menuAction())
 
-
-
-
+        #self.actionMaking_Backups.toggled.connect(self.backup.run)
+        self.pushButton.clicked.connect(self.sudokuWidget.eliminate_with_centre)
 
         #self.centralwidget.setHighlightCol(3, row=8, on=True)
         #self.centralwidget.setHighlightSquare(4, 1, extra=True)
