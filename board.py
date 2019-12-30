@@ -13,7 +13,7 @@ import distutils.text_file
 # sudoku is -1
 # indeces are from 1..9 not rom 0..8
 
-class board(object):
+class modelBoard(object):
     def __init__(self, ival, ival2=None):
         self.parts = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 
@@ -189,19 +189,24 @@ class board(object):
     # remove int val from all cells in indices
     # indices: list of index tupels (i,j)
     # val: int that is supposed to be removed from cells
+    # repeat == -1: stop if erasing is possible but don't do it
     # repeat == 0: stop after first value erased
     # repeat == 1: stop after first cell solved
     # repeat == 2: continue until throughout whole row
     # return -1: error, tried to remove value from a solved cell
     # return  0: nothing could be erased
-    # return  1: value(s) could be erased
-    # return  2: cell(s) could be solved
+    # return  1: erasing is possible, but has not been done
+    # return  2: value(s) could be erased
+    # return  3: cell(s) could be solved
     def eliminateFromUnit(self, val, indices, repeat=0):
         solved_cells  = [] #indices of cells that were solved
         reduced_cells = [] # indices of cells that could be reduced
 
         # loop over all cells for given indices
         for i,j in indices:
+            mcell = self.at(i, j)
+            if repeat == -1 and val in mcell:
+                return (1, [], [])
             ret = self.at(i, j).remove(val)
             if ret == 3:  # element was removed and cell solved
 
@@ -216,17 +221,17 @@ class board(object):
                 reduced_cells.append((i, j))
 
                 if repeat <=1:
-                    return (2, reduced_cells, solved_cells)
+                    return (3, reduced_cells, solved_cells)
 
             elif ret == 2:  # element was but cell not solved
                 reduced_cells.append((i, j))
                 if repeat == 0:
-                    return (1, reduced_cells, solved_cells)
+                    return (2, reduced_cells, solved_cells)
             elif ret == -1:  # error was encountered
                 error_cell = (i,j)
                 return (-1, reduced_cells, solved_cells, error_cell)
 
-        retVal = 0
+        retVal = 1
         if reduced_cells: retVal += 1
         if solved_cells:  retVal += 1
 
@@ -284,13 +289,15 @@ class board(object):
 
     # eliminate value from solved cell for index (r,c) from
     # all other cells in the same row, cell and square
+    # repeat == -1: stop if erasing is possible but don't do it
     # repeat == 0: stop after first value erased
     # repeat == 1: stop after first cell solved
     # repeat == 2: continue until throughout whole row
     # return -1: error, tried to remove value from a solved cell
     # return  0: nothing could be erased
-    # return  1: value(s) could be erased
-    # return  2: cell(s) could be solved
+    # return  1: it is possible to erase but it has not been done
+    # return  2: value(s) have been erased
+    # return  3: cell(s)  have been solved (and values erased
     def eliminateVal(self, r, c, repeat=0):
         solved_cells  = []
         reduced_cells = []
@@ -299,7 +306,7 @@ class board(object):
         # the higher comp, the harder it is to return prematurely
         # notice if repeat==2, then comp==3 and all if condition
         # are False
-        comp = 1+repeat
+        comp = 2+repeat
 
 
         ret1 = self.eliminateFromCol(r, c, repeat)
@@ -535,6 +542,8 @@ class board(object):
 ###################################################################
     # solve as much as possible using only elimination and
     # and hiddenSingles
+    # return:  number of iterations till nothing more can be solved
+    # return: -1  board not consistent
     def solve_logic(self):
         fret = 0
         ret  = self.eliminateAll()
@@ -550,19 +559,18 @@ class board(object):
             if not self.is_all_consistent():  # board not consistent
                 return -1
 
-            if num > 0:  # more has been solved, we can leave
-                fret = 2
+            #if num > 0:  # more has been solved, we can leave
+             #   fret = 3
 
             ret = self.eliminateAll()
             if ret[0] == -1:  # error, board not consistent
                 return -1
-            else:
-                fret = max(fret, ret[0])
 
             if num == 0 and ret[0] == 0: # no cell has been solved, or eliminated
-                return fret
+                return i
 
-        return fret
+        #iterations maxed out, but stuff still changes
+        return 1000
 
 
 
@@ -679,7 +687,7 @@ class board(object):
 
 if __name__ == '__main__':
 
-    sudoku = board("sudoku_data.csv", "hardest1")
+    sudoku = modelBoard("sudoku_data.csv", "hard1")
 
     sudoku.dump3()
     ret = sudoku.solve_logic()
