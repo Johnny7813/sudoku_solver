@@ -38,7 +38,7 @@ class SudokuBoardWidget(QFrame):
             row = []
             for j in range(1,10):
                 bCell = self.model.at(i,j)
-                sCell = SudokuCellWidget(bCell , self)
+                sCell = SudokuCellWidget(bCell , self, (i,j))
                 sCell.setGeometry(x , y, cWidth, cWidth)
                 row.append(sCell)
 
@@ -61,7 +61,7 @@ class SudokuBoardWidget(QFrame):
 
     def _setHightlightUnit(self, indices, on=True, centre=None):
         if on:
-            name = "highlight1"
+            name = "level1"
         else:
             name = "normal"
 
@@ -71,20 +71,20 @@ class SudokuBoardWidget(QFrame):
 
         if centre and on:
             wCell = self.at(*centre)
-            wCell.setBackground("highlight2")
+            wCell.setBackground("level2")
 
 
     # level = "normal", "highlight1", "highlight2"
     def _setHightlightIndices(self, indices, level = "normal"):
         for i,j in indices:
             wCell = self.at(i,j)
-            wCell.setBackground(level)
+            wCell.setBgHighlight(level)
 
 
     # centre is a column index in row
     def setHighlightRow(self, row, col=-1, on=True):
-        levelA = "highlight1"
-        levelB = "highlight2"
+        levelA = "level1"
+        levelB = "level2"
         remove = False
         extra  = None
 
@@ -106,8 +106,8 @@ class SudokuBoardWidget(QFrame):
 
     # centre is a column index in row
     def setHighlightCol(self, col, row=-1, on=True):
-        levelA = "highlight1"
-        levelB = "highlight2"
+        levelA = "level1"
+        levelB = "level2"
         remove = False
         extra  = None
 
@@ -130,8 +130,8 @@ class SudokuBoardWidget(QFrame):
 
     # centre is a column index in row
     def setHighlightSquare(self, row, col, centre=False, on=True):
-        levelA = "highlight1"
-        levelB = "highlight2"
+        levelA = "level1"
+        levelB = "level2"
         remove = False
         index  = None
 
@@ -167,7 +167,8 @@ class SudokuBoardWidget(QFrame):
             self.repaint()
             time.sleep(delay)
             self.setHighlightRow(row, col=col, on=False)
-            #self.model.dump3()
+            self.repaint()
+            self.model.dump3()
 
         ret1 = self.model.eliminateFromCol(row, col, repeat=-1)
         print("eliminate_with_centre ret=", ret1, "row=", row, "col=", col)
@@ -179,6 +180,7 @@ class SudokuBoardWidget(QFrame):
             self.repaint()
             time.sleep(delay)
             self.setHighlightCol(col, row=row, on=False)
+            self.repaint()
             #self.model.dump3()
 
         ret1 = self.model.eliminateFromSquare(row, col, repeat=-1)
@@ -191,6 +193,7 @@ class SudokuBoardWidget(QFrame):
             self.repaint()
             time.sleep(delay)
             self.setHighlightSquare(row, col, centre=True, on=False)
+            self.repaint()
             #self.model.dump3()
 
         self.model.dump3()
