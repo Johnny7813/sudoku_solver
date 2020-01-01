@@ -53,8 +53,7 @@ class SudokuBoardWidget(QFrame):
 
         # update delay when updating the widget
         self.update_delay = 0.5
-        # unit index for finding the next hidden Singles
-        self.hiddenSinglesIndex = 1
+
 
 
     # return reference for cellWidget at grid knot i,j
@@ -97,6 +96,11 @@ class SudokuBoardWidget(QFrame):
         if centreLevel:
             self._setHightlightIndices([(row, col)], centreLevel)
 
+    # colLevel/centreLevel is the highlight level: normal, level1, level2
+    # centreRow is an optional centre cell widget on that col that can be highlighted
+    def setSquareHighlightUnique(self, num, squareLevel="normal"):
+        indices = self.model._square_indices_unique(num)
+        self._setHightlightIndices(indices, squareLevel)
 
 
 
@@ -106,19 +110,16 @@ class SudokuBoardWidget(QFrame):
             print("eliminate_with_centre: unexploited_cells emptry!")
             return
         row, col = self.model.unexploited_cells.popleft()
-        delay    = 0.5
 
         ret1 = self.model.eliminateFromRow(row, col, repeat=-1)
         print("eliminate_with_centre ret=",ret1, "row=", row, "col=", col )
         if ret1[0] == 1: #stuff can be eliminated
-            #self.setHighlightRow(row, col=col, on=True)
             self.setRowHighlight(row, col, rowLevel="level1", centreLevel="level2")
             self.repaint()
             time.sleep(self.update_delay)
             self.model.eliminateFromRow(row, col, repeat=2)
             self.repaint()
             time.sleep(self.update_delay)
-            #self.setHighlightRow(row, col=col, on=False)
             self.setRowHighlight(row, col, rowLevel="normal")
             self.repaint()
             self.model.dump3()
@@ -126,7 +127,6 @@ class SudokuBoardWidget(QFrame):
         ret1 = self.model.eliminateFromCol(row, col, repeat=-1)
         print("eliminate_with_centre ret=", ret1, "row=", row, "col=", col)
         if ret1[0] == 1:  # stuff can be eliminated
-            #self.setHighlightCol(col, row=row, on=True)
             self.setColHighlight(row, col, colLevel="level1", centreLevel="level2")
             self.repaint()
             time.sleep(self.update_delay)
@@ -155,38 +155,51 @@ class SudokuBoardWidget(QFrame):
 
     # eliminate stuff from solved cell given by index
     def hiddenSingelsNext(self):
-        num  = self.hiddenSinglesIndex
+        for num in range(1,10):
+            ret1 = self.model.findHiddenSinglesInRow(num, repeat=-1)
+            print("hiddenSinglesNext ret=", ret1, "index=", num )
+            if ret1[0] == 1:  # cells can be solved in that row
+                self.setRowHighlight(num, 1, rowLevel="level1")
+                self.repaint()
+                time.sleep(self.update_delay)
+                self.model.findHiddenSinglesInRow(num, repeat=2)
+                self.repaint()
+                time.sleep(self.update_delay)
+                self.setRowHighlight(num, 1, rowLevel="normal")
+                self.repaint()
+                self.model.dump3()
+                return True
 
-        ret1 = self.model.findHiddenSinglesInRow(num, repeat=-1)
-        print("hiddenSinglesNext ret=", ret1, "index=", num )
-        if ret1[0] == 1:  # cells can be solved in that row
-            self.setRowHighlight(num, 1, rowLevel="level1")
-            self.repaint()
-            time.sleep(self.update_delay)
-            self.model.findHiddenSinglesInRow(num, repeat=2)
-            self.repaint()
-            time.sleep(self.update_delay)
-            self.setRowHighlight(num, 1, rowLevel="normal")
-            self.repaint()
-            self.model.dump3()
+            ret2 = self.model.findHiddenSinglesInCol(num, repeat=-1)
+            if ret2[0] == 1:  # stuff can be eliminated
+                self.setColHighlight(1, num, colLevel="level1")
+                self.repaint()
+                time.sleep(self.update_delay)
+                self.model.findHiddenSinglesInCol(num, repeat=2)
+                self.repaint()
+                time.sleep(self.update_delay)
+                self.setColHighlight(1, num, colLevel="normal")
+                self.repaint()
+                # self.model.dump3()
+                return True
 
-        ret2 = self.model.findHiddenSinglesInCol(num, repeat=-1)
-        if ret2[0] == 1:  # stuff can be eliminated
-            self.setColHighlight(1, num, colLevel="level1")
-            self.repaint()
-            time.sleep(self.update_delay)
-            self.model.findHiddenSinglesInCol(num, repeat=2)
-            self.repaint()
-            time.sleep(self.update_delay)
-            self.setColHighlight(1, num, colLevel="normal")
-            self.repaint()
-            # self.model.dump3()
+            ret3 = self.model.findHiddenSinglesInSquare(num, repeat=-1)
+            if ret3[0] == 1:  # stuff can be eliminated
+                self.setSquareHighlightUnique(num, squareLevel="level1")
+                self.repaint()
+                time.sleep(self.update_delay)
+                self.model.findHiddenSinglesInSquare(num, repeat=2)
+                self.repaint()
+                time.sleep(self.update_delay)
+                #self.setColHighlight(1, num, colLevel="normal")
+                self.setSquareHighlightUnique(num, squareLevel="normal")
+                self.repaint()
+                # self.model.dump3()
+                return True
+
 
         self.model.dump3()
-        self.hiddenSinglesIndex += 1
-        if self.hiddenSinglesIndex >= 10:
-            self.hiddenSinglesIndex = 1
-
+        return False
 
 
 
