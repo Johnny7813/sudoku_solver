@@ -370,10 +370,11 @@ class modelBoard(object):
     ### reduce cells by eliminating values of solved cells from other
     ### cells on the same row, column or square
 
-    # repeat==1: continue if a cell was solved
+    # repeat==-1: is it possible to solve a cell, stop after first cell could be solved but don't change it
     # repeat==0: stop if a cell was solved
-    # return n:  number of solved cells
-    def findHiddenSinglesInUnit(self, indices, repeat=True):
+    # repeat==1: continue if a cell was solved
+    # return (num, solved_indices) : num=number of solved cells, solved_indices= list of indices of solved cells
+    def findHiddenSinglesInUnit(self, indices, repeat=1):
         unsolved_values  = cell()  # candidates that are not fixed to a cell, this creates a full cell
         unsolved_indices = []      # indices of cells in the Unit that are not solved
         solved_indices   = []      # here we write the indices of all cells we could solve
@@ -394,12 +395,19 @@ class modelBoard(object):
 
             if len(contained) == 1:
                 i,j = contained[0]
-                self.set(i, j, val)
+                solved_indices.append((i, j))
+
+                # yes a cell can be solved, but don't change it
+                if repeat == -1:
+                    return (1, solved_indices)
+
+                mcell = self.at(i, j)
+                mcell.removeAllBut(val)
                 self.unexploited_cells.append((i,j))
                 self.unsolved_num -= 1
-                solved_indices.append((i,j))
 
-                if not repeat: # return findings of one solved cell
+
+                if repeat == 0: # return findings of first solved cell
                     return (1,solved_indices)
 
                 unsolved_indices.remove((i,j))
@@ -412,24 +420,24 @@ class modelBoard(object):
 
 
     # find all hidden singles in Row r
-    def findHiddenSinglesInRow(self, r, repeat=True):
+    def findHiddenSinglesInRow(self, r, repeat=2):
         indices = self._row_indices(r,1,False)
         return self.findHiddenSinglesInUnit(indices, repeat)
 
     # find all hidden singles in Column c
-    def findHiddenSinglesInCol(self, c, repeat=True):
+    def findHiddenSinglesInCol(self, c, repeat=2):
         indices = self._col_indices(1,c,False)
         return self.findHiddenSinglesInUnit(indices, repeat)
 
     # find all hidden singles in square n
     # see _square_indices_unique()  function
-    def findHiddenSinglesInSquare(self, n, repeat=True):
+    def findHiddenSinglesInSquare(self, n, repeat=2):
         indices = self._square_indices_unique(n)
         return self.findHiddenSinglesInUnit(indices, repeat)
 
 
     # find all hidden singles
-    def findAllHiddenSingles(self, repeat=True):
+    def findAllHiddenSingles(self, repeat=2):
         num = 0
         solved_indices = []
         for n in range(1,10):
@@ -688,8 +696,9 @@ class modelBoard(object):
 if __name__ == '__main__':
 
     sudoku = modelBoard("sudoku_data.csv", "hard1")
-
+    sudoku.findHiddenSinglesInCol(4, 0)
     sudoku.dump3()
+
     ret = sudoku.solve_logic()
     sudoku.dump3()
     print("sove_logic returns=", ret)

@@ -59,6 +59,24 @@ class cell(set):
         else:
             return 1  # element not in cell
 
+
+    # remove all values except v
+    # return True if v in cell
+    def removeAllBut(self, v):
+        if v in self:
+            values = list(self)
+            values.remove(v)
+
+            for w in values:
+                super().discard(w)
+
+            return True
+
+        else:
+            return False
+
+
+
     # remove element v from set
     # return True: element successfully removed
     # return False: element was not in set
