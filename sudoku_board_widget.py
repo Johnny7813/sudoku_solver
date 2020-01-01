@@ -51,7 +51,10 @@ class SudokuBoardWidget(QFrame):
             if i % 3 == 0:
                 y += mlWidth
 
-
+        # update delay when updating the widget
+        self.update_delay = 0.5
+        # unit index for finding the next hidden Singles
+        self.hiddenSinglesIndex = 1
 
 
     # return reference for cellWidget at grid knot i,j
@@ -59,94 +62,42 @@ class SudokuBoardWidget(QFrame):
         return self.cellWidgetArrary[i-1][j-1]
 
 
-    def _setHightlightUnit(self, indices, on=True, centre=None):
-        if on:
-            name = "level1"
-        else:
-            name = "normal"
 
-        for i,j in indices:
-            wCell = self.at(i,j)
-            wCell.setBackground(name)
-
-        if centre and on:
-            wCell = self.at(*centre)
-            wCell.setBackground("level2")
-
-
-    # level = "normal", "highlight1", "highlight2"
+    # level = "normal", "level1", "level2"
     def _setHightlightIndices(self, indices, level = "normal"):
         for i,j in indices:
             wCell = self.at(i,j)
             wCell.setBgHighlight(level)
 
 
-    # centre is a column index in row
-    def setHighlightRow(self, row, col=-1, on=True):
-        levelA = "level1"
-        levelB = "level2"
-        remove = False
-        extra  = None
-
-        if on:
-            if col > 0:
-                extra = [(row, col)]
-                remove = True
-            else:
-                col    = 1
-        else:
-            levelA = "normal"
-            levelB = "normal"
-
-        indices = self.model._row_indices(row, col, remove)
-        self._setHightlightIndices(indices, levelA)
-        if extra:
-            self._setHightlightIndices(extra, levelB)
+    # rowLevel/centreLevel is the highlight level: normal, level1, level2
+    # row, col is an optional centre cell widget on that row that can be highlighted
+    # if not centre is needed just specify any col index
+    def setRowHighlight(self, row, col, rowLevel="normal", centreLevel=None):
+        indices = self.model._row_indices(row, col, False)
+        self._setHightlightIndices(indices, rowLevel)
+        if centreLevel:
+            self._setHightlightIndices([(row, col)], centreLevel)
 
 
-    # centre is a column index in row
-    def setHighlightCol(self, col, row=-1, on=True):
-        levelA = "level1"
-        levelB = "level2"
-        remove = False
-        extra  = None
-
-        if on:
-            if row > 0:
-                extra = [(row, col)]
-                remove = True
-            else:
-                row = 1
-        else:
-            levelA = "normal"
-            levelB = "normal"
-
-        indices = self.model._col_indices(row, col, remove)
-        self._setHightlightIndices(indices, levelA)
-        if extra:
-            self._setHightlightIndices(extra, levelB)
+    # colLevel/centreLevel is the highlight level: normal, level1, level2
+    # centreRow is an optional centre cell widget on that col that can be highlighted
+    def setColHighlight(self, row, col, colLevel="normal", centreLevel=None):
+        indices = self.model._col_indices(row, col, False)
+        self._setHightlightIndices(indices, colLevel)
+        if centreLevel:
+            self._setHightlightIndices([(row, col)], centreLevel)
 
 
+    # colLevel/centreLevel is the highlight level: normal, level1, level2
+    # centreRow is an optional centre cell widget on that col that can be highlighted
+    def setSquareHighlight(self, row, col, squareLevel="normal", centreLevel=None):
+        indices = self.model._square_indices(row, col, False)
+        self._setHightlightIndices(indices, squareLevel)
+        if centreLevel:
+            self._setHightlightIndices([(row, col)], centreLevel)
 
-    # centre is a column index in row
-    def setHighlightSquare(self, row, col, centre=False, on=True):
-        levelA = "level1"
-        levelB = "level2"
-        remove = False
-        index  = None
 
-        if on:
-            if centre:
-                index = [(row, col)]
-                remove = True
-        else:
-            levelA = "normal"
-            levelB = "normal"
-
-        indices = self.model._square_indices(row, col, remove)
-        self._setHightlightIndices(indices, levelA)
-        if index:
-            self._setHightlightIndices(index, levelB)
 
 
     # eliminate stuff from solved cell given by index
@@ -160,43 +111,86 @@ class SudokuBoardWidget(QFrame):
         ret1 = self.model.eliminateFromRow(row, col, repeat=-1)
         print("eliminate_with_centre ret=",ret1, "row=", row, "col=", col )
         if ret1[0] == 1: #stuff can be eliminated
-            self.setHighlightRow(row, col=col, on=True)
+            #self.setHighlightRow(row, col=col, on=True)
+            self.setRowHighlight(row, col, rowLevel="level1", centreLevel="level2")
             self.repaint()
-            time.sleep(delay)
+            time.sleep(self.update_delay)
             self.model.eliminateFromRow(row, col, repeat=2)
             self.repaint()
-            time.sleep(delay)
-            self.setHighlightRow(row, col=col, on=False)
+            time.sleep(self.update_delay)
+            #self.setHighlightRow(row, col=col, on=False)
+            self.setRowHighlight(row, col, rowLevel="normal")
             self.repaint()
             self.model.dump3()
 
         ret1 = self.model.eliminateFromCol(row, col, repeat=-1)
         print("eliminate_with_centre ret=", ret1, "row=", row, "col=", col)
         if ret1[0] == 1:  # stuff can be eliminated
-            self.setHighlightCol(col, row=row, on=True)
+            #self.setHighlightCol(col, row=row, on=True)
+            self.setColHighlight(row, col, colLevel="level1", centreLevel="level2")
             self.repaint()
-            time.sleep(delay)
+            time.sleep(self.update_delay)
             self.model.eliminateFromCol(row, col, repeat=2)
             self.repaint()
-            time.sleep(delay)
-            self.setHighlightCol(col, row=row, on=False)
+            time.sleep(self.update_delay)
+            self.setColHighlight(row, col, colLevel="normal")
             self.repaint()
             #self.model.dump3()
 
         ret1 = self.model.eliminateFromSquare(row, col, repeat=-1)
         print("eliminate_with_centre ret=", ret1, "row=", row, "col=", col)
         if ret1[0] == 1:  # stuff can be eliminated
-            self.setHighlightSquare(row, col, centre=True, on=True)
+            self.setSquareHighlight(row, col, squareLevel="level1", centreLevel="level2")
             self.repaint()
-            time.sleep(delay)
+            time.sleep(self.update_delay)
             self.model.eliminateFromSquare(row, col, repeat=2)
             self.repaint()
-            time.sleep(delay)
-            self.setHighlightSquare(row, col, centre=True, on=False)
+            time.sleep(self.update_delay)
+            self.setSquareHighlight(row, col, squareLevel="normal")
             self.repaint()
             #self.model.dump3()
 
         self.model.dump3()
+
+
+    # eliminate stuff from solved cell given by index
+    def hiddenSingelsNext(self):
+        num  = self.hiddenSinglesIndex
+
+        ret1 = self.model.findHiddenSinglesInRow(num, repeat=-1)
+        print("hiddenSinglesNext ret=", ret1, "index=", num )
+        if ret1[0] == 1:  # cells can be solved in that row
+            self.setRowHighlight(num, 1, rowLevel="level1")
+            self.repaint()
+            time.sleep(self.update_delay)
+            self.model.findHiddenSinglesInRow(num, repeat=2)
+            self.repaint()
+            time.sleep(self.update_delay)
+            self.setRowHighlight(num, 1, rowLevel="normal")
+            self.repaint()
+            self.model.dump3()
+
+        ret2 = self.model.findHiddenSinglesInCol(num, repeat=-1)
+        if ret2[0] == 1:  # stuff can be eliminated
+            self.setColHighlight(1, num, colLevel="level1")
+            self.repaint()
+            time.sleep(self.update_delay)
+            self.model.findHiddenSinglesInCol(num, repeat=2)
+            self.repaint()
+            time.sleep(self.update_delay)
+            self.setColHighlight(1, num, colLevel="normal")
+            self.repaint()
+            # self.model.dump3()
+
+        self.model.dump3()
+        self.hiddenSinglesIndex += 1
+        if self.hiddenSinglesIndex >= 10:
+            self.hiddenSinglesIndex = 1
+
+
+
+
+
 
 
     def paintEvent(self, event):
