@@ -488,6 +488,83 @@ class modelBoard(object):
 
         return (val, ind)
 
+###################################################################################
+###############
+    # mode==0: find pair, if possible
+    # mode==1: remove values
+    # return 0 no pair found
+    # return 1 pair found
+    # return 2 pair found, values removed
+    def findNakedPairInUnit(self, indices, mode=1):
+        chosen = []
+        for i,j in indices:
+            mcell = self.at(i,j)
+            if mcell.size() == 2:
+                chosen.append((i,j))
+
+        if len(chosen) <= 1:
+            return (0, [])
+
+        found = []
+        while len(chosen) >= 2:
+            (i,j) = chosen.pop()
+            mcell = self.at(i,j)
+            for k,l in chosen:
+                if mcell == self.at(k,l):
+                    print("Found a naked pair")
+                    found = [(i,j), (k,l)]
+
+        if len(found) == 0:
+            return (0, [])
+        elif mode == 0:
+            return (1, found)
+
+        values = set(self.at(*found[0]))
+
+        for i,j in indices:
+            if (i,j) in found:
+                continue
+            mcell  = self.at(i,j)
+            mcell -= values
+
+        return (2, found)
+
+
+    # mode==0: find pair, if possible
+    # mode==1: remove values
+    # return 0 no pair found
+    # return 1 pair found
+    # return 2 pair found, values removed
+    def findNakedPairInRow(self, row, mode=1):
+        indices = self._row_indices(row, 1, False)
+        return  self.findNakedPairInUnit(indices, mode)
+
+    # mode==0: find pair, if possible
+    # mode==1: remove values
+    # return 0 no pair found
+    # return 1 pair found
+    # return 2 pair found, values removed
+    def findNakedPairInCol(self, col, mode=1):
+        indices = self._col_indices(1, col, False)
+        return  self.findNakedPairInUnit(indices, mode)
+
+    # mode==0: find pair, if possible
+    # mode==1: remove values
+    # return 0 no pair found
+    # return 1 pair found
+    # return 2 pair found, values removed
+    def findNakedPairInSquare(self, num, mode=1):
+        indices = self._square_indices_unique(num)
+        return  self.findNakedPairInUnit(indices, mode)
+
+
+
+
+
+
+
+
+
 ####################################################################################
 ######### test if the sukoku is consistent?
 

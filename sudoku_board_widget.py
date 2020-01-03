@@ -162,7 +162,7 @@ class SudokuBoardWidget(QFrame):
                 self.setRowHighlight(num, 1, rowLevel="level1")
                 self.repaint()
                 time.sleep(self.update_delay)
-                self.model.findHiddenSinglesInRow(num, repeat=2)
+                self.model.findHiddenSinglesInRow(num, repeat=0)
                 self.repaint()
                 time.sleep(self.update_delay)
                 self.setRowHighlight(num, 1, rowLevel="normal")
@@ -175,7 +175,7 @@ class SudokuBoardWidget(QFrame):
                 self.setColHighlight(1, num, colLevel="level1")
                 self.repaint()
                 time.sleep(self.update_delay)
-                self.model.findHiddenSinglesInCol(num, repeat=2)
+                self.model.findHiddenSinglesInCol(num, repeat=0)
                 self.repaint()
                 time.sleep(self.update_delay)
                 self.setColHighlight(1, num, colLevel="normal")
@@ -188,7 +188,7 @@ class SudokuBoardWidget(QFrame):
                 self.setSquareHighlightUnique(num, squareLevel="level1")
                 self.repaint()
                 time.sleep(self.update_delay)
-                self.model.findHiddenSinglesInSquare(num, repeat=2)
+                self.model.findHiddenSinglesInSquare(num, repeat=0)
                 self.repaint()
                 time.sleep(self.update_delay)
                 #self.setColHighlight(1, num, colLevel="normal")
@@ -200,6 +200,28 @@ class SudokuBoardWidget(QFrame):
 
         self.model.dump3()
         return False
+
+
+    # try to find hidden pairs
+    def findNextHiddenPairs(self):
+        sum = 0
+        for num in range(1,10):
+            ret1 = self.model.findNakedPairInRow(num, mode=1)
+            if ret1[0] == 1:
+                print("Found Naked pair in row=", num, "  indices=", ret1[1])
+            ret2 = self.model.findNakedPairInCol(num, mode=1)
+            if ret2[0] == 1:
+                print("Found Naked pair in col=", num, "  indices=", ret2[1])
+            ret3 = self.model.findNakedPairInSquare(num, mode=1)
+            if ret3[0] == 1:
+                print("Found Naked pair in col=", num, "  indices=", ret3[1])
+            sum += ret1[0] + ret2[0] + ret3[0]
+
+        if sum == 0:
+            print("No Naked Pairs found!")
+
+
+
 
 
 
