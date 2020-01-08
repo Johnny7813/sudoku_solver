@@ -55,10 +55,10 @@ class SudokuCellWidget(QtWidgets.QFrame):
         self.redNumbers = set()
 
         # red number halo highlight
-        self.redNumbersHalo = set([4,6,7,8,9])
+        self.redNumbersHalo = set()
 
         # green number halo highlight
-        self.greenNumbersHalo = set([1,2,3,5])
+        self.greenNumbersHalo = set()
 
 
 
@@ -105,6 +105,21 @@ class SudokuCellWidget(QtWidgets.QFrame):
     def backgroundColor(self):
         bgColor = self.__class__.Colors[self.bgHighlight]
         return bgColor
+
+
+    # values = set of candidates in the cell
+    # mode = "red", "green", None
+    # set Halo Values and color
+    def setHaloValues(self,values, mode=None):
+        if mode == "red":
+            self.redNumbersHalo.clear()
+            self.redNumbersHalo |= (self.myCell & values)
+        elif mode == "green":
+            self.greenNumbersHalo.clear()
+            self.greenNumbersHalo |= (self.myCell & values)
+        elif mode == None:
+            self.redNumbersHalo.clear()
+            self.greenNumbersHalo.clear()
 
 
     # main paint function

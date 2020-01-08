@@ -103,6 +103,55 @@ class SudokuBoardWidget(QFrame):
         self._setHightlightIndices(indices, squareLevel)
 
 
+###########################################################################
+
+
+    # indices: list of indices
+    # values:  set of candidates in a set to hightlight
+    # mode = "red", "green", None
+    def _setIndicesHalo(self, indices, values, mode=None):
+        for i,j in indices:
+            wCell = self.at(i,j)
+            wCell.setHaloValues(values, mode)
+
+
+    # row = row number, values = set of candidates
+    # mode = red, green, none
+    # except_col = this col is not hightlighted
+    def setRowHalo(self,row, values, except_col=None, mode=None):
+        if not except_col:
+            col = 1
+            remove = False
+        else:
+            col = except_col
+            remove = True
+        indices = self.model._row_indices(row, col, remove)
+        self._setIndicesHalo(indices, values, mode)
+
+    # row = row number, values = set of candidates
+    # mode = red, green, none
+    # except_col = this col is not hightlighted
+    def setColHalo(self, col, values, except_row=None, mode=None):
+        if not except_row:
+            row = 1
+            remove = False
+        else:
+            row = except_row
+            remove = True
+        indices = self.model._col_indices(row, col, remove)
+        self._setIndicesHalo(indices, values, mode)
+
+    # row = row number, values = set of candidates
+    # mode = red, green, none
+    # except_col = this col is not hightlighted
+    def setSquareHalo(self, row, col, values, mode=None, exceptCentre=False):
+        indices = self.model._square_indices(row, col, exceptCentre)
+        self._setIndicesHalo(indices, values, mode)
+
+
+
+##################################################################################
+
 
     # eliminate stuff from solved cell given by index
     def eliminate_with_centre(self):
@@ -115,11 +164,14 @@ class SudokuBoardWidget(QFrame):
         print("eliminate_with_centre ret=",ret1, "row=", row, "col=", col )
         if ret1[0] == 1: #stuff can be eliminated
             self.setRowHighlight(row, col, rowLevel="level1", centreLevel="level2")
+            val = self.model.at(row, col).value()
+            self.setRowHalo(row, set([val]), except_col=None, mode="red")
             self.repaint()
             time.sleep(self.update_delay)
             self.model.eliminateFromRow(row, col, repeat=2)
             self.repaint()
             time.sleep(self.update_delay)
+            self.setRowHalo(row, set(), except_col=None, mode=None)
             self.setRowHighlight(row, col, rowLevel="normal")
             self.repaint()
             self.model.dump3()
@@ -127,12 +179,15 @@ class SudokuBoardWidget(QFrame):
         ret1 = self.model.eliminateFromCol(row, col, repeat=-1)
         print("eliminate_with_centre ret=", ret1, "row=", row, "col=", col)
         if ret1[0] == 1:  # stuff can be eliminated
+            val = self.model.at(row, col).value()
             self.setColHighlight(row, col, colLevel="level1", centreLevel="level2")
+            self.setColHalo(col, set([val]), except_row=None, mode="red")
             self.repaint()
             time.sleep(self.update_delay)
             self.model.eliminateFromCol(row, col, repeat=2)
             self.repaint()
             time.sleep(self.update_delay)
+            self.setColHalo(col, set(), except_row=None, mode=None)
             self.setColHighlight(row, col, colLevel="normal")
             self.repaint()
             #self.model.dump3()
@@ -140,12 +195,15 @@ class SudokuBoardWidget(QFrame):
         ret1 = self.model.eliminateFromSquare(row, col, repeat=-1)
         print("eliminate_with_centre ret=", ret1, "row=", row, "col=", col)
         if ret1[0] == 1:  # stuff can be eliminated
+            val = self.model.at(row, col).value()
             self.setSquareHighlight(row, col, squareLevel="level1", centreLevel="level2")
+            self.setSquareHalo(row, col, set([val]), mode="red")
             self.repaint()
             time.sleep(self.update_delay)
             self.model.eliminateFromSquare(row, col, repeat=2)
             self.repaint()
             time.sleep(self.update_delay)
+            self.setSquareHalo(row, col, set(), mode=None)
             self.setSquareHighlight(row, col, squareLevel="normal")
             self.repaint()
             #self.model.dump3()

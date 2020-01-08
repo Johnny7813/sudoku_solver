@@ -143,18 +143,20 @@ class modelBoard(object):
     def _row_indices(self,r,c, remove=False):
         # produce row indices for row r
         tmp = list(range(1, 10))
-        indices = list(product([r], tmp))
         if remove: # remove (r,c) element from list
-            indices.remove((r,c))
+            tmp.remove(c)
+
+        indices = list(product([r], tmp))
         #print("Main index ", (r,c), " ### Row indices ", indices)
         return indices
 
     def _col_indices(self,r,c, remove=False):
         # produce col indices for row r
         tmp = list(range(1, 10))
-        indices = list(product(tmp, [c]))
         if remove: # remove (r,c) element from list
-            indices.remove((r,c))
+            tmp.remove(r)
+
+        indices = list(product(tmp, [c]))
         #print("Main index ", (r, c), " ### Column indices ", indices)
         return indices
 
