@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-#import sys
-#from cell import *
-#from board import *
+
 from sudoku_board_widget import *
 from PyQt5 import QtCore, QtGui,  QtWidgets
+from board import *
 #from PyQt5.QtWidgets import QMainWindow, QWidget
-from ui_sudoku_app   import Ui_MainWindow
+#from ui_sudoku_app   import Ui_MainWindow
 
 
 class MainWindow(QMainWindow):
@@ -16,9 +15,10 @@ class MainWindow(QMainWindow):
         font.setPointSize(12)
         self.setFont(font)
 
-        self.sudokuModel = modelBoard("sudoku_data.csv", "easy1")
-        #QtCore.QCoreApplication.addLibraryPath(".")
-        #self.setupUi(self)
+        self.statusbar = QtWidgets.QStatusBar(self)
+        self.statusbar.setObjectName("statusbar")
+        self.setStatusBar(self.statusbar)
+        self.sudokuModel = sudokuModelBoard("sudoku_data.csv", "easy1")
         self.setWindowTitle("Sudoku Application Test")
         self.setMinimumSize(950, 780)
         self.resize(960, 780)
@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
         self.label2.setFont(font)
         self.label3 = QtWidgets.QLabel(self.horizontalLayoutWidget)
         self.label3.setObjectName("label")
-        self.label3.setText("Hidden Pair ")
+        self.label3.setText("Hidden  ")
         font = self.label3.font()
         font.setPointSize(14)
         self.label3.setFont(font)
@@ -69,17 +69,17 @@ class MainWindow(QMainWindow):
         self.horizontalLayout.addLayout(self.formLayout)
         self.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(self)
+        self.menubar.setFont(font)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 850, 42))
         self.menubar.setObjectName("menubar")
         font = self.menubar.font()
+        font.setWeight(50)
         font.setPointSize(14)
         self.menubar.setFont(font)
         self.menuFile = QtWidgets.QMenu("File", self.menubar)
         self.menuFile.setObjectName("menuFile")
+        self.menuFile.setTitle("File")
         self.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(self)
-        self.statusbar.setObjectName("statusbar")
-        self.setStatusBar(self.statusbar)
         self.toolBar = QtWidgets.QToolBar(self)
         self.toolBar.setObjectName("toolBar")
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
@@ -89,17 +89,26 @@ class MainWindow(QMainWindow):
         self.menuFile.addAction(self.actionOpen_sudoku)
         self.menubar.addAction(self.menuFile.menuAction())
 
+        # add quit action
+        self.actionQuit = QtWidgets.QAction(self)
+        quitIcon = QtGui.QIcon()
+        quitIcon.addPixmap(QtGui.QPixmap("./icons/application-exit.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
+        quitIcon.addPixmap(QtGui.QPixmap("./icons/application-exit.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionQuit.setIcon(quitIcon)
+        self.actionQuit.setObjectName("actionQuit")
+        self.actionQuit.setText("Quit")
+        self.actionQuit.setShortcut("Ctrl+Q")
+        self.menuFile.addAction(self.actionQuit)
+        self.toolBar.addAction(self.actionQuit)
+
         #self.actionMaking_Backups.toggled.connect(self.backup.run)
         self.pushButton1.clicked.connect(self.sudokuWidget.eliminate_with_centre)
         self.pushButton2.clicked.connect(self.sudokuWidget.hiddenSingelsNext)
         self.pushButton3.clicked.connect(self.sudokuWidget.findNextHiddenPairs)
-
-        #self.centralwidget.setHighlightCol(3, row=8, on=True)
-        #self.centralwidget.setHighlightSquare(4, 1, extra=True)
-        #time.sleep(5)
-        #self.centralwidget.setHighlightRow(5, set=False, centre=None)
+        self.actionQuit.triggered.connect(self.close)
 
 
+        
 
 
 

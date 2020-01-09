@@ -14,10 +14,12 @@ class SudokuBoardWidget(QFrame):
     metrics = {"cellWidth": 72, "cLineWidth": 2, "font": "Noto Sans", "fontSize": 20, "centralFontSize": 40,
                "mLineWidth": 4}
 
-    def __init__(self, model,  parent):
+    def __init__(self, sudokuModelBoard,  parent):
         super().__init__(parent)
 
-        self.model = model
+        # model is the sudoku modeBoard
+        self.model = sudokuModelBoard
+        self.statusbar = parent.statusBar()
         self.cellWidgetArrary = []
 
         mlWidth = SudokuBoardWidget.metrics["mLineWidth"]
@@ -54,6 +56,7 @@ class SudokuBoardWidget(QFrame):
         # update delay when updating the widget
         self.update_delay = 0.5
 
+        #self.statusbar.showMessage("Ready", 3000)
 
 
     # return reference for cellWidget at grid knot i,j
@@ -163,6 +166,7 @@ class SudokuBoardWidget(QFrame):
         ret1 = self.model.eliminateFromRow(row, col, repeat=-1)
         print("eliminate_with_centre ret=",ret1, "row=", row, "col=", col )
         if ret1[0] == 1: #stuff can be eliminated
+            self.statusbar.showMessage("row eliminations successful", 2000)
             self.setRowHighlight(row, col, rowLevel="level1", centreLevel="level2")
             val = self.model.at(row, col).value()
             self.setRowHalo(row, set([val]), except_col=None, mode="red")
@@ -179,6 +183,7 @@ class SudokuBoardWidget(QFrame):
         ret1 = self.model.eliminateFromCol(row, col, repeat=-1)
         print("eliminate_with_centre ret=", ret1, "row=", row, "col=", col)
         if ret1[0] == 1:  # stuff can be eliminated
+            self.statusbar.showMessage("column eliminations successful", 2000)
             val = self.model.at(row, col).value()
             self.setColHighlight(row, col, colLevel="level1", centreLevel="level2")
             self.setColHalo(col, set([val]), except_row=None, mode="red")
@@ -195,6 +200,7 @@ class SudokuBoardWidget(QFrame):
         ret1 = self.model.eliminateFromSquare(row, col, repeat=-1)
         print("eliminate_with_centre ret=", ret1, "row=", row, "col=", col)
         if ret1[0] == 1:  # stuff can be eliminated
+            self.statusbar.showMessage("square eliminations successful", 2000)
             val = self.model.at(row, col).value()
             self.setSquareHighlight(row, col, squareLevel="level1", centreLevel="level2")
             self.setSquareHalo(row, col, set([val]), mode="red")
@@ -217,6 +223,7 @@ class SudokuBoardWidget(QFrame):
             ret1 = self.model.findHiddenSinglesInRow(num, repeat=-1)
             print("hiddenSinglesNext ret=", ret1, "index=", num )
             if ret1[0] == 1:  # cells can be solved in that row
+                self.statusbar.showMessage("hidden single found in row", 2000)
                 self.setRowHighlight(num, 1, rowLevel="level1")
                 self.repaint()
                 time.sleep(self.update_delay)
@@ -230,6 +237,7 @@ class SudokuBoardWidget(QFrame):
 
             ret2 = self.model.findHiddenSinglesInCol(num, repeat=-1)
             if ret2[0] == 1:  # stuff can be eliminated
+                self.statusbar.showMessage("hidden single found in column", 2000)
                 self.setColHighlight(1, num, colLevel="level1")
                 self.repaint()
                 time.sleep(self.update_delay)
@@ -243,6 +251,7 @@ class SudokuBoardWidget(QFrame):
 
             ret3 = self.model.findHiddenSinglesInSquare(num, repeat=-1)
             if ret3[0] == 1:  # stuff can be eliminated
+                self.statusbar.showMessage("hidden single found in square", 2000)
                 self.setSquareHighlightUnique(num, squareLevel="level1")
                 self.repaint()
                 time.sleep(self.update_delay)

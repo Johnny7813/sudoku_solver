@@ -13,7 +13,7 @@ import distutils.text_file
 # sudoku is -1
 # indeces are from 1..9 not rom 0..8
 
-class modelBoard(object):
+class sudokuModelBoard(object):
     def __init__(self, ival, ival2=None):
         self.parts = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 
