@@ -20,8 +20,8 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.statusbar)
         self.sudokuModel = sudokuModelBoard("sudoku_data.csv", "easy1")
         self.setWindowTitle("Sudoku Application Test")
-        self.setMinimumSize(950, 780)
-        self.resize(960, 780)
+        self.setMinimumSize(950, 800)
+        self.resize(960, 820)
         self.setObjectName("sudokuMainWindow")
         self.centralwidget = QtWidgets.QWidget(self)
         self.centralwidget.setObjectName("centralwidget")
@@ -89,6 +89,18 @@ class MainWindow(QMainWindow):
         self.menuFile.addAction(self.actionOpen_sudoku)
         self.menubar.addAction(self.menuFile.menuAction())
 
+        # add open action
+        self.actionOpen = QtWidgets.QAction(self)
+        openIcon = QtGui.QIcon()
+        openIcon.addPixmap(QtGui.QPixmap("./icons/document-open.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
+        openIcon.addPixmap(QtGui.QPixmap("./icons/document-open.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionOpen.setIcon(openIcon)
+        self.actionOpen.setObjectName("actionOpen")
+        self.actionOpen.setText("Open")
+        self.actionOpen.setShortcut("Ctrl+O")
+        self.menuFile.addAction(self.actionOpen)
+        self.toolBar.addAction(self.actionOpen)
+
         # add quit action
         self.actionQuit = QtWidgets.QAction(self)
         quitIcon = QtGui.QIcon()
@@ -101,6 +113,7 @@ class MainWindow(QMainWindow):
         self.menuFile.addAction(self.actionQuit)
         self.toolBar.addAction(self.actionQuit)
 
+
         #self.actionMaking_Backups.toggled.connect(self.backup.run)
         self.pushButton1.clicked.connect(self.sudokuWidget.eliminate_with_centre)
         self.pushButton2.clicked.connect(self.sudokuWidget.hiddenSingelsNext)
@@ -108,7 +121,7 @@ class MainWindow(QMainWindow):
         self.actionQuit.triggered.connect(self.close)
 
 
-        
+
 
 
 

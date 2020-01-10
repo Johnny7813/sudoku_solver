@@ -266,6 +266,7 @@ class SudokuBoardWidget(QFrame):
 
 
         self.model.dump3()
+        self.statusbar.showMessage("no hidden singles found", 2000)
         return False
 
 
@@ -285,6 +286,7 @@ class SudokuBoardWidget(QFrame):
             sum += ret1[0] + ret2[0] + ret3[0]
 
         if sum == 0:
+            self.statusbar.showMessage("no naked pairs found", 2000)
             print("No Naked Pairs found!")
 
 
